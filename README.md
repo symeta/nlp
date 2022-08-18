@@ -117,4 +117,42 @@ huggingface_estimator = HuggingFace(entry_point='train.py',
 huggingface_estimator.fit({'train': training_input_path, 'test': test_input_path})
 ```
 
-2. 
+2. find the url of the model generated in last step by executing the following command:
+
+```python
+huggingface_estimator.model_data
+```
+'s3://sagemaker-us-east1-1-<account id>/huggingface-pytorch-training-2022-08-17-07-35-08-506/output/model.tar.gz'
+
+3. download the model to local disk, and then upload it to the s3 bucket @ GCR region
+
+4. open a sagemaker jupyter notebook @ GCR region, and execute the following commands:
+    
+```python
+!pip install "sagemaker>=2.48.0" "transformers==4.6.1" "datasets[s3]==1.6.2" --upgrade
+
+import sagemaker.huggingface
+```    
+
+```python
+from sagemaker.huggingface import HuggingFaceModel
+import sagemaker
+role = sagemaker.get_execution_role()
+```
+
+```python
+huggingface_model = HuggingFaceModel (
+    model_data = 's3://***/***/model.tar.gz',
+    role = role,
+    transformers_version="4.6",
+    pytorch_version="1.7",
+    py_version="py36"
+)
+```
+
+```python
+predictor = huggingface_model.deploy(
+    initial_instance_count=1,
+    instance_type="ml.g4dn.xlarge"
+)
+    
